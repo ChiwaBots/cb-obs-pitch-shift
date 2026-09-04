@@ -64,13 +64,15 @@ FetchContent_Declare(
   GIT_REPOSITORY https://github.com/Signalsmith-Audio/linear.git
   GIT_TAG 0.6.0
   GIT_SHALLOW ON
-  SOURCE_SUBDIR do-not-configure
+  SOURCE_SUBDIR
+  do-not-configure
 )
 FetchContent_Declare(
   signalsmith_stretch
   GIT_REPOSITORY https://github.com/Signalsmith-Audio/signalsmith-stretch.git
   GIT_TAG 57b93f4e9206a089a45387eaa39bdc9f310d3308
-  SOURCE_SUBDIR do-not-configure
+  SOURCE_SUBDIR
+  do-not-configure
 )
 FetchContent_MakeAvailable(signalsmith_linear signalsmith_stretch)
 
