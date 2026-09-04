@@ -24,8 +24,17 @@ on a separate mic source are untouched.
 
 Download the release for your platform from the *Releases* page, then:
 
-- **Windows** — extract the ZIP and copy the `cb-pitch-shift` folder into
-  `%ProgramData%\obs-studio\plugins\`. Restart OBS.
+- **Windows** — two options:
+  - **Installer** (`…-windows-x64.exe`): double-click and follow the wizard. It is
+    **not code-signed**, so Windows SmartScreen shows a one-time "unknown publisher"
+    prompt — click *More info → Run anyway*. To remove it later, use *Settings → Apps*
+    (or *Control Panel → Programs and Features*) → **Pitch Shift (ChiwaBots.com)** →
+    Uninstall.
+  - **ZIP** (`…-windows-x64.zip`): copy the `cb-pitch-shift` folder into
+    `%ProgramData%\obs-studio\plugins\`. No SmartScreen prompt, but you install and
+    remove the files yourself.
+
+  Restart OBS after either.
 - **macOS** — open the `.pkg` and follow the installer, or drop the `.plugin` bundle into
   `~/Library/Application Support/obs-studio/plugins/`. Restart OBS. See the note below —
   the build is **ad-hoc signed** (free, not notarized), so macOS will ask you to allow it
@@ -50,6 +59,19 @@ does not recognise a developer for it. On first load you may see a warning. Eith
 
 Apple Silicon requires the bundle to carry at least an ad-hoc signature to load at all;
 the CI build already applies it, so once quarantine is cleared the plugin loads normally.
+
+## Uninstall
+
+- **Windows (installer):** *Settings → Apps* (or *Control Panel → Programs and Features*)
+  → **Pitch Shift (ChiwaBots.com)** → Uninstall.
+- **Windows (ZIP):** delete the `cb-pitch-shift` folder from `%ProgramData%\obs-studio\plugins\`.
+- **macOS:** delete `~/Library/Application Support/obs-studio/plugins/cb-pitch-shift.plugin`.
+  A macOS `.pkg` has no built-in uninstaller, so this is a manual step — dragging that one
+  bundle to the Trash is the whole uninstall.
+- **Linux (.deb):** `sudo apt remove cb-pitch-shift` (or `sudo dpkg -r cb-pitch-shift`).
+- **Linux (tarball):** delete the plugin files you extracted into your OBS plugins directory.
+
+Restart OBS afterwards.
 
 ## Usage
 
