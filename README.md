@@ -35,30 +35,52 @@ Download the release for your platform from the *Releases* page, then:
     remove the files yourself.
 
   Restart OBS after either.
-- **macOS** — open the `.pkg` and follow the installer, or drop the `.plugin` bundle into
-  `~/Library/Application Support/obs-studio/plugins/`. Restart OBS. See the note below —
-  the build is **ad-hoc signed** (free, not notarized), so macOS will ask you to allow it
-  the first time.
-- **Linux** — extract the tarball into your OBS plugins directory (typically
-  `~/.config/obs-studio/plugins/` or your distribution's system plugin path), or build
-  from source. Restart OBS.
+- **macOS** — open the `.pkg` and follow the installer, then restart OBS. The `.pkg` is
+  **not notarized** (free path), so macOS Gatekeeper blocks it on first open — see below.
+- **Linux** — two options:
+  - **`.deb`** (`sudo apt install ./cb-pitch-shift-*.deb`): installs to `/usr`, which matches
+    OBS from the **official OBS PPA** (`ppa:obsproject/obs-studio`) or your distribution's apt
+    package. If OBS doesn't pick it up, your OBS is almost certainly installed under a different
+    prefix (e.g. a downloaded build under `/usr/local`, or a Flatpak/Snap sandbox) — see below.
+  - **Per-user drop-in** (works with *any* non-sandboxed OBS, no `sudo`, survives OBS updates):
+    extract the tarball (or copy the `.deb`'s files) into
+    `~/.config/obs-studio/plugins/cb-pitch-shift/` so the layout is:
 
-### macOS: "unidentified developer"
+    ```
+    ~/.config/obs-studio/plugins/cb-pitch-shift/bin/64bit/cb-pitch-shift.so
+    ~/.config/obs-studio/plugins/cb-pitch-shift/data/locale/*.ini
+    ```
 
-This plugin is signed ad-hoc (no paid Apple Developer account), so macOS Gatekeeper
-does not recognise a developer for it. On first load you may see a warning. Either:
+  Restart OBS after either.
 
-- **Clear the download quarantine** before restarting OBS:
+  > **"Installed but OBS doesn't show the filter"** almost always means a path mismatch: OBS
+  > scans the plugin dir under **its own** install prefix. Check where OBS keeps its bundled
+  > plugins with `dpkg -L obs-studio | grep obs-plugins` — the `.so` has to sit in that same
+  > tree. Flatpak/Snap OBS are sandboxed and won't see system-installed plugins at all; use the
+  > per-user drop-in, or install OBS from the official PPA.
+
+### macOS: Gatekeeper blocks the `.pkg`
+
+Because the build is unsigned / ad-hoc (no paid Apple Developer account), double-clicking
+the downloaded `.pkg` shows *"Apple could not verify … it may contain malware"* with only
+**Done** and **Move to Trash** — no *Open* button. This is expected. Click **Done** (not
+Move to Trash), then use one of these once:
+
+- **Terminal** — strip the download quarantine, then open the `.pkg` normally:
 
   ```bash
-  xattr -dr com.apple.quarantine ~/Library/Application\ Support/obs-studio/plugins/cb-pitch-shift.plugin
+  xattr -dr com.apple.quarantine ~/Downloads/cb-pitch-shift-*-macos-universal.pkg
   ```
 
-- **or** allow it once under *System Settings → Privacy & Security* (scroll down, click
-  *Open Anyway* next to the cb-pitch-shift entry), then restart OBS.
+- **or** *System Settings → Privacy & Security → scroll down →* **Open Anyway** next to the
+  blocked `.pkg`, authenticate, then open the `.pkg` again.
 
-Apple Silicon requires the bundle to carry at least an ad-hoc signature to load at all;
-the CI build already applies it, so once quarantine is cleared the plugin loads normally.
+The installer places `cb-pitch-shift.plugin` in `~/Library/Application Support/obs-studio/plugins/`.
+Apple Silicon requires the bundle to carry at least an ad-hoc signature to load at all; the
+CI build already applies it, so once the `.pkg` runs the plugin loads in OBS normally.
+
+> To skip this prompt entirely (download-and-run), the `.pkg` would need a paid Apple
+> Developer ID signature + notarization — deliberately deferred on the free path.
 
 ## Uninstall
 
@@ -69,7 +91,7 @@ the CI build already applies it, so once quarantine is cleared the plugin loads 
   A macOS `.pkg` has no built-in uninstaller, so this is a manual step — dragging that one
   bundle to the Trash is the whole uninstall.
 - **Linux (.deb):** `sudo apt remove cb-pitch-shift` (or `sudo dpkg -r cb-pitch-shift`).
-- **Linux (tarball):** delete the plugin files you extracted into your OBS plugins directory.
+- **Linux (per-user drop-in):** delete `~/.config/obs-studio/plugins/cb-pitch-shift/`.
 
 Restart OBS afterwards.
 

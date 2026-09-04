@@ -71,8 +71,6 @@ struct PitchFilter {
 	}
 };
 
-#define CB_BRAND_SUFFIX " (ChiwaBots.com)"
-
 const char *filter_get_name(void *)
 {
 

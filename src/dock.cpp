@@ -418,7 +418,9 @@ void cb_pitch_dock_register()
 
 	g_dock = new CbPitchDock();
 
-	if (!obs_frontend_add_dock_by_id(DOCK_ID, T_("DockTitle"), g_dock)) {
+	// Brand the dock title the same way the filter name is branded (pitch-shared.hpp).
+	const std::string title = std::string(T_("DockTitle")) + CB_BRAND_SUFFIX;
+	if (!obs_frontend_add_dock_by_id(DOCK_ID, title.c_str(), g_dock)) {
 
 		delete g_dock;
 		g_dock = nullptr;
