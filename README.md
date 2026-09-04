@@ -34,7 +34,13 @@ Download the release for your platform from the *Releases* page, then:
     `%ProgramData%\obs-studio\plugins\`. No SmartScreen prompt, but you install and
     remove the files yourself.
 
-  Restart OBS after either.
+  Restart OBS after either. The installer's wizard follows your Windows display language
+  (English, 繁體中文, 简体中文, 日本語, 한국어, Español).
+
+  > **Portable ("green") OBS** scans relative to its own folder, not `%ProgramData%`, so
+  > the installer isn't for it — use the ZIP. From the ZIP, copy
+  > `cb-pitch-shift\bin\64bit\cb-pitch-shift.dll` into `<your OBS>\obs-plugins\64bit\` and
+  > the contents of `cb-pitch-shift\data\` into `<your OBS>\data\obs-plugins\cb-pitch-shift\`.
 - **macOS** — open the `.pkg` and follow the installer, then restart OBS. The `.pkg` is
   **not notarized** (free path), so macOS Gatekeeper blocks it on first open — see below.
 - **Linux** — two options:

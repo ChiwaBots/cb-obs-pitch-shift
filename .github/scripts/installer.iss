@@ -46,12 +46,22 @@ ArchitecturesInstallIn64BitMode=x64
 Compression=lzma2
 SolidCompression=yes
 WizardStyle=modern
+; Auto-use the language matching the system locale (no picker), like the macOS .pkg.
+ShowLanguageDialog=no
 OutputDir={#AppOutputDir}
 OutputBaseFilename={#AppOutputBaseName}
+
+[Languages]
+; English / Japanese / Korean / Spanish ship with Inno Setup; Traditional and
+; Simplified Chinese are unofficial translations vendored under isl/. The wizard
+; auto-picks the language matching the system locale.
+Name: "en"; MessagesFile: "compiler:Default.isl"
+Name: "zh_TW"; MessagesFile: "isl\ChineseTraditional.isl"
+Name: "zh_CN"; MessagesFile: "isl\ChineseSimplified.isl"
+Name: "ja"; MessagesFile: "compiler:Languages\Japanese.isl"
+Name: "ko"; MessagesFile: "compiler:Languages\Korean.isl"
+Name: "es"; MessagesFile: "compiler:Languages\Spanish.isl"
 
 [Files]
 Source: "{#AppSourceDir}\bin\64bit\*"; DestDir: "{app}\bin\64bit"; Flags: ignoreversion recursesubdirs createallsubdirs
 Source: "{#AppSourceDir}\data\*"; DestDir: "{app}\data"; Flags: ignoreversion recursesubdirs createallsubdirs
-
-[Messages]
-FinishedLabelNoIcons=Setup has installed Pitch Shift (ChiwaBots.com). Restart OBS Studio to load the plugin.
