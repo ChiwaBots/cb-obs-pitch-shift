@@ -1,0 +1,3 @@
+# The obs-plugintemplate CI scripts (zsh/bash under .github and build-aux) rely on
+# LF line endings, so normalize the whole tree to LF regardless of the checkout OS.
+* text=auto eol=lf

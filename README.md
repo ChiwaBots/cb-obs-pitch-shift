@@ -1,0 +1,105 @@
+# cb-pitch-shift — OBS pitch-shift audio filter
+
+An [OBS Studio](https://obsproject.com/) audio filter that transposes a source's
+audio up or down by whole semitones **without changing its tempo** — plus a dock
+for changing the key with one click during a stream.
+
+Typical use is a karaoke / cover stream: put a backing track on a Browser or Media
+source, add this filter, and raise or lower the key to fit the singer — the vocals
+on a separate mic source are untouched.
+
+## Features
+
+- **Transpose −12 … +12 semitones**, tempo preserved (a phase-vocoder pitch shift).
+- **Bypass at 0 semitones** — no processing and no added latency.
+- **Constant ~60 ms audio latency** when active (see the note in the filter). Video is
+  not delayed, so add a *Render Delay* filter to the same source if you need exact sync.
+- **Dock** ("Pitch Shift Key"): pick the target source, nudge the key with `−` / `+`,
+  reset to 0, and read the current value at a glance. When the target's audio isn't
+  routed through OBS, the dock flags it (see below).
+- **Localized** in English, 繁體中文, 简体中文, 日本語, 한국어, and Español.
+- **Windows, macOS and Linux**, OBS **31.1** and newer.
+
+## Install
+
+Download the release for your platform from the *Releases* page, then:
+
+- **Windows** — extract the ZIP and copy the `cb-pitch-shift` folder into
+  `%ProgramData%\obs-studio\plugins\`. Restart OBS.
+- **macOS** — open the `.pkg` and follow the installer, or drop the `.plugin` bundle into
+  `~/Library/Application Support/obs-studio/plugins/`. Restart OBS. See the note below —
+  the build is **ad-hoc signed** (free, not notarized), so macOS will ask you to allow it
+  the first time.
+- **Linux** — extract the tarball into your OBS plugins directory (typically
+  `~/.config/obs-studio/plugins/` or your distribution's system plugin path), or build
+  from source. Restart OBS.
+
+### macOS: "unidentified developer"
+
+This plugin is signed ad-hoc (no paid Apple Developer account), so macOS Gatekeeper
+does not recognise a developer for it. On first load you may see a warning. Either:
+
+- **Clear the download quarantine** before restarting OBS:
+
+  ```bash
+  xattr -dr com.apple.quarantine ~/Library/Application\ Support/obs-studio/plugins/cb-pitch-shift.plugin
+  ```
+
+- **or** allow it once under *System Settings → Privacy & Security* (scroll down, click
+  *Open Anyway* next to the cb-pitch-shift entry), then restart OBS.
+
+Apple Silicon requires the bundle to carry at least an ad-hoc signature to load at all;
+the CI build already applies it, so once quarantine is cleared the plugin loads normally.
+
+## Usage
+
+- **As a filter:** right-click a source → *Filters* → add **Pitch Shift** under audio
+  filters, then set the key in semitones.
+- **From the dock:** open the *Pitch Shift Key* dock, choose the source, and use `−` / `+`.
+
+> **Important — Browser sources need "Control audio via OBS".**
+> This is an audio filter, so it only affects audio that flows through OBS. A Browser
+> source sends its sound straight to your speakers by default, so the filter never
+> receives it and the pitch shift silently does nothing. Turn on **Control audio via OBS**
+> from the source's right-click menu in the Audio Mixer. If the source appears in the
+> Audio Mixer, its audio is going through OBS. The dock marks a source with ⚠ and shows
+> a hint when its audio isn't routed through OBS.
+
+## Build from source
+
+The build uses the standard [obs-plugintemplate](https://github.com/obsproject/obs-plugintemplate)
+tooling: CMake presets download the pinned OBS, obs-deps and Qt6 (see `buildspec.json`)
+and the DSP headers on the fly, so you do not need a local OBS build.
+
+Requirements: CMake 3.28+, Git, and a platform toolchain — Visual Studio 2022 (C++ desktop
+workload) on Windows, Xcode on macOS, or GCC/Clang + Ninja on Linux.
+
+```bash
+# Windows
+cmake --preset windows-x64
+cmake --build --preset windows-x64
+
+# macOS
+cmake --preset macos
+cmake --build --preset macos
+
+# Linux
+cmake --preset ubuntu-x86_64
+cmake --build --preset ubuntu-x86_64
+```
+
+Release artifacts for all three platforms are produced by GitHub Actions (see
+`.github/workflows/`) on every push.
+
+## Third-party components
+
+- [Signalsmith Stretch](https://github.com/Signalsmith-Audio/signalsmith-stretch) and
+  [signalsmith-linear](https://github.com/Signalsmith-Audio/linear) — MIT, header-only
+  (the pitch-shift DSP), fetched at configure time.
+- Qt 6 — used for the dock, linked against the Qt that OBS ships (LGPL/GPL).
+- libobs / obs-frontend-api (OBS Studio) — GPL-2.0-or-later.
+
+## License
+
+**GPL-2.0-or-later** — see [LICENSE](LICENSE). This plugin links libobs, which is
+distributed under the GNU GPL, so the plugin is released under a compatible license.
