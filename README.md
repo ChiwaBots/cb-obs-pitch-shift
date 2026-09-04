@@ -1,5 +1,7 @@
 # cb-pitch-shift — OBS pitch-shift audio filter
 
+**English** · [繁體中文](README.zh-TW.md) · [日本語](README.ja.md)
+
 An [OBS Studio](https://obsproject.com/) audio filter that transposes a source's
 audio up or down by whole semitones **without changing its tempo** — plus a dock
 for changing the key with one click during a stream.
@@ -7,6 +9,8 @@ for changing the key with one click during a stream.
 Typical use is a karaoke / cover stream: put a backing track on a Browser or Media
 source, add this filter, and raise or lower the key to fit the singer — the vocals
 on a separate mic source are untouched.
+
+**Contents:** [Features](#features) · [Install](#install) · [Uninstall](#uninstall) · [Usage](#usage) · [Build from source](#build-from-source) · [License](#license)
 
 ## Features
 
@@ -103,17 +107,59 @@ Restart OBS afterwards.
 
 ## Usage
 
-- **As a filter:** right-click a source → *Filters* → add **Pitch Shift** under audio
-  filters, then set the key in semitones.
-- **From the dock:** open the *Pitch Shift Key* dock, choose the source, and use `−` / `+`.
+Set it up once, then change the key live from the dock while you stream.
 
-> **Important — Browser sources need "Control audio via OBS".**
-> This is an audio filter, so it only affects audio that flows through OBS. A Browser
-> source sends its sound straight to your speakers by default, so the filter never
-> receives it and the pitch shift silently does nothing. Turn on **Control audio via OBS**
-> from the source's right-click menu in the Audio Mixer. If the source appears in the
-> Audio Mixer, its audio is going through OBS. The dock marks a source with ⚠ and shows
-> a hint when its audio isn't routed through OBS.
+### 1. Put the backing track on its own source
+
+Add the accompaniment as a **Browser source** (for a YouTube / karaoke link) or a
+**Media source** (for a local file). Keep the singer's microphone on a *separate* source —
+this filter only affects the source you add it to, so the vocals stay untouched.
+
+### 2. Route the backing track's audio through OBS — don't skip this
+
+This is an **audio filter**, so it only affects sound that flows through OBS. A Browser
+source plays its audio straight to your speakers by default, so the filter would receive
+nothing and do **nothing**. Open the backing-track source's **Properties** and tick
+**Control audio via OBS**. Once it's on, the source shows up in the **Audio Mixer** —
+that's how you know its audio is going through OBS.
+
+![Tick "Control audio via OBS" in the Browser source's Properties](docs/img/usage-control-audio.png)
+
+### 3. Add the Pitch Shift filter
+
+Right-click the backing-track source → **Filters**. Under **Audio Filters**, click **+**
+and choose **Pitch Shift (ChiwaBots.com)**.
+
+![Adding the Pitch Shift (ChiwaBots.com) audio filter](docs/img/usage-add-filter.png)
+
+### 4. Set the key
+
+Drag **Key (semitones)** to transpose −12 … +12 semitones. **0 = bypass** (no processing,
+no added latency); higher values raise the key.
+
+![The Pitch Shift filter panel with the Key slider](docs/img/usage-filter-panel.png)
+
+### 5. Change the key live from the dock
+
+Open **Docks → Pitch Shift Key (ChiwaBots.com)** from the OBS menu bar. Pick the target
+source in the dropdown, then tap **−** / **+** to nudge the key or **Reset** to return to 0.
+The current value shows between the buttons, and the filter's slider moves with it — so one
+click during a song is all it takes.
+
+![The Pitch Shift Key dock](docs/img/usage-dock.png)
+
+> If the target's audio isn't going through OBS (step 2), the dock marks it with **⚠** and
+> shows a hint — the pitch shift does nothing until you turn on *Control audio via OBS*.
+
+### Notes & troubleshooting
+
+- **~60 ms latency when active.** Only the audio is delayed, not the video, so the picture
+  runs slightly ahead. To realign, add a **Render Delay** filter to the same source set to
+  about 60 ms.
+- **No change in the sound?** The source's audio isn't routed through OBS — redo step 2
+  (the dock's **⚠** is the giveaway).
+- **Filter or dock missing after installing?** Restart OBS, and check the plugin landed in
+  the right place for your OBS install (see [Install](#install)).
 
 ## Build from source
 
