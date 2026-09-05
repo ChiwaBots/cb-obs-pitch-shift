@@ -1,12 +1,17 @@
-; SPDX-License-Identifier: GPL-2.0-or-later
+﻿; SPDX-License-Identifier: GPL-2.0-or-later
 ;
-; Inno Setup script for cb-pitch-shift (UNSIGNED — no code-signing certificate).
-; Produces a one-click Windows installer alongside the plain ZIP. Because it is
-; unsigned, Windows SmartScreen shows a one-time "unknown publisher" prompt; the
-; ZIP avoids that but has to be extracted by hand.
+; Inno Setup script for cb-pitch-shift. The installer is not code-signed, so
+; Windows SmartScreen shows an "unknown publisher" prompt on first run; the ZIP
+; release is the alternative.
 ;
-; All values come from Package-Windows.ps1 via ISCC /D defines; the fallbacks
-; below only exist so the script can be opened/compiled standalone.
+; Values come from Package-Windows.ps1 via ISCC /D defines; the fallbacks below
+; let the script compile on its own.
+;
+; This file is UTF-8 with a BOM on purpose: [CustomMessages] contains CJK text
+; and Inno Setup expects a BOM for non-ASCII scripts. Do not strip it.
+;
+; {#AppName} (the preprocessor define) is the folder and file name; the [Setup]
+; AppName directive is the localized product name shown to the user.
 
 #ifndef AppName
   #define AppName "cb-pitch-shift"
@@ -28,18 +33,21 @@
 ; A fixed AppId is what ties every install/upgrade/uninstall together and drives
 ; the "Apps & features" entry. Never change it once released.
 AppId={{B8F3A2E1-7C4D-4A6B-9E2F-3D5C1A8B6F09}
-AppName=Pitch Shift (ChiwaBots.com)
+AppName={cm:AppDisplayName}
 AppVersion={#AppVersion}
-AppVerName=Pitch Shift (ChiwaBots.com) {#AppVersion}
+AppVerName={cm:AppDisplayName} {#AppVersion}
 AppPublisher=ChiwaBots
 AppPublisherURL=https://chiwabots.com
-; OBS on Windows only scans %ProgramData%\obs-studio\plugins (machine-wide),
-; regardless of where OBS itself is installed — so the path is fixed and the
-; install is per-machine (hence admin).
+; With AppName set from a custom message ISCC cannot derive these, and the .exe
+; would have empty file properties. English is fine for exe metadata.
+VersionInfoDescription=Pitch Shift (ChiwaBots) Setup
+VersionInfoProductName=Pitch Shift (ChiwaBots)
+; OBS on Windows scans %ProgramData%\obs-studio\plugins regardless of where OBS
+; itself is installed, so the path is fixed and the install is per-machine.
 DefaultDirName={commonappdata}\obs-studio\plugins\{#AppName}
 DisableDirPage=yes
 DisableProgramGroupPage=yes
-UninstallDisplayName=Pitch Shift (ChiwaBots.com) OBS plugin
+UninstallDisplayName={cm:AppDisplayName}
 PrivilegesRequired=admin
 ArchitecturesAllowed=x64
 ArchitecturesInstallIn64BitMode=x64
@@ -65,3 +73,14 @@ Name: "es"; MessagesFile: "compiler:Languages\Spanish.isl"
 [Files]
 Source: "{#AppSourceDir}\bin\64bit\*"; DestDir: "{app}\bin\64bit"; Flags: ignoreversion recursesubdirs createallsubdirs
 Source: "{#AppSourceDir}\data\*"; DestDir: "{app}\data"; Flags: ignoreversion recursesubdirs createallsubdirs
+
+[CustomMessages]
+; Product name shown in the wizard and in "Apps & features". Keep in sync with
+; the PitchShift value in data/locale/*.ini plus the suffix in
+; src/pitch-shared.hpp. No "OBS" in the name (OBS forum resource policy).
+en.AppDisplayName=Pitch Shift (ChiwaBots)
+zh_TW.AppDisplayName=升降 key (ChiwaBots)
+zh_CN.AppDisplayName=升降 key (ChiwaBots)
+ja.AppDisplayName=キー変更 (ChiwaBots)
+ko.AppDisplayName=키 조절 (ChiwaBots)
+es.AppDisplayName=Cambio de tono (ChiwaBots)

@@ -1,174 +1,124 @@
-# cb-pitch-shift — OBS pitch-shift audio filter
+# cb-pitch-shift
 
 **English** · [繁體中文](README.zh-TW.md) · [日本語](README.ja.md)
 
-An [OBS Studio](https://obsproject.com/) audio filter that transposes a source's
-audio up or down by whole semitones **without changing its tempo** — plus a dock
-for changing the key with one click during a stream.
+A pitch-shift audio filter for [OBS Studio](https://obsproject.com/). It moves a source's audio up or down by whole semitones without changing the tempo, and adds a dock so you can change the key with one click while streaming.
 
-Typical use is a karaoke / cover stream: put a backing track on a Browser or Media
-source, add this filter, and raise or lower the key to fit the singer — the vocals
-on a separate mic source are untouched.
+The main use case is karaoke and cover streams. Put the backing track on a Browser or Media source, add this filter to it, and raise or lower the key to suit the singer. The microphone sits on a different source, so the vocals are not affected.
 
-**Contents:** [Features](#features) · [Install](#install) · [Uninstall](#uninstall) · [Usage](#usage) · [Build from source](#build-from-source) · [License](#license)
+This is a third-party plugin made by [ChiwaBots](https://chiwabots.com). It is not part of OBS Studio and is not affiliated with the OBS Project. See [Trademarks](#trademarks) and [AI disclosure](#ai-disclosure) below.
+
+**Contents:** [Features](#features) · [Install](#install) · [Uninstall](#uninstall) · [Usage](#usage) · [Build from source](#build-from-source) · [AI disclosure](#ai-disclosure) · [License](#license)
 
 ## Features
 
-- **Transpose −12 … +12 semitones**, tempo preserved (a phase-vocoder pitch shift).
-- **Bypass at 0 semitones** — no processing and no added latency.
-- **Constant ~60 ms audio latency** when active (see the note in the filter). Video is
-  not delayed, so add a *Render Delay* filter to the same source if you need exact sync.
-- **Dock** ("Pitch Shift Key"): pick the target source, nudge the key with `−` / `+`,
-  reset to 0, and read the current value at a glance. When the target's audio isn't
-  routed through OBS, the dock flags it (see below).
-- **Localized** in English, 繁體中文, 简体中文, 日本語, 한국어, and Español.
-- **Windows, macOS and Linux**, OBS **31.1** and newer.
+- Transpose from -12 to +12 semitones. Tempo is preserved (phase-vocoder pitch shifting).
+- 0 semitones is a bypass: no processing, no added latency.
+- When active, the audio is delayed by a constant ~60 ms (see the note inside the filter). Video is not delayed, so add a Render Delay filter to the same source if you need exact sync.
+- A dock ("Pitch Shift Key") that lets you pick the target source, move the key with `-` / `+`, reset to 0, and see the current value. If the target's audio is not routed through OBS, the dock shows a warning.
+- Localized in English, 繁體中文, 简体中文, 日本語, 한국어 and Español.
+- Windows, macOS and Linux. Requires OBS 31.1 or newer.
 
 ## Install
 
-Download the release for your platform from the *Releases* page, then:
+Download the file for your platform from the *Releases* page.
 
-- **Windows** — two options:
-  - **Installer** (`…-windows-x64.exe`): double-click and follow the wizard. It is
-    **not code-signed**, so Windows SmartScreen shows a one-time "unknown publisher"
-    prompt — click *More info → Run anyway*. To remove it later, use *Settings → Apps*
-    (or *Control Panel → Programs and Features*) → **Pitch Shift (ChiwaBots.com)** →
-    Uninstall.
-  - **ZIP** (`…-windows-x64.zip`): copy the `cb-pitch-shift` folder into
-    `%ProgramData%\obs-studio\plugins\`. No SmartScreen prompt, but you install and
-    remove the files yourself.
+### Windows
 
-  Restart OBS after either. The installer's wizard follows your Windows display language
-  (English, 繁體中文, 简体中文, 日本語, 한국어, Español).
+Two options:
 
-  > **Portable ("green") OBS** scans relative to its own folder, not `%ProgramData%`, so
-  > the installer isn't for it — use the ZIP. From the ZIP, copy
-  > `cb-pitch-shift\bin\64bit\cb-pitch-shift.dll` into `<your OBS>\obs-plugins\64bit\` and
-  > the contents of `cb-pitch-shift\data\` into `<your OBS>\data\obs-plugins\cb-pitch-shift\`.
-- **macOS** — open the `.pkg` and follow the installer, then restart OBS. The `.pkg` is
-  **not notarized** (free path), so macOS Gatekeeper blocks it on first open — see below.
-- **Linux** — two options:
-  - **`.deb`** (`sudo apt install ./cb-pitch-shift-*.deb`): installs to `/usr`, which matches
-    OBS from the **official OBS PPA** (`ppa:obsproject/obs-studio`) or your distribution's apt
-    package. If OBS doesn't pick it up, your OBS is almost certainly installed under a different
-    prefix (e.g. a downloaded build under `/usr/local`, or a Flatpak/Snap sandbox) — see below.
-  - **Per-user drop-in** (works with *any* non-sandboxed OBS, no `sudo`, survives OBS updates):
-    extract the tarball (or copy the `.deb`'s files) into
-    `~/.config/obs-studio/plugins/cb-pitch-shift/` so the layout is:
+- **Installer** (`…-windows-x64.exe`): double-click it and follow the wizard. The installer is not code-signed, so Windows SmartScreen shows an "unknown publisher" prompt the first time. Click *More info*, then *Run anyway*. The wizard follows your Windows display language (English, 繁體中文, 简体中文, 日本語, 한국어, Español).
+- **ZIP** (`…-windows-x64.zip`): copy the `cb-pitch-shift` folder into `%ProgramData%\obs-studio\plugins\`. There is no SmartScreen prompt, but you install and remove the files yourself.
 
-    ```
-    ~/.config/obs-studio/plugins/cb-pitch-shift/bin/64bit/cb-pitch-shift.so
-    ~/.config/obs-studio/plugins/cb-pitch-shift/data/locale/*.ini
-    ```
+Restart OBS afterwards.
 
-  Restart OBS after either.
+Portable OBS looks for plugins relative to its own folder rather than `%ProgramData%`, so the installer does not work for it. Use the ZIP instead: copy `cb-pitch-shift\bin\64bit\cb-pitch-shift.dll` into `<your OBS>\obs-plugins\64bit\`, and the contents of `cb-pitch-shift\data\` into `<your OBS>\data\obs-plugins\cb-pitch-shift\`.
 
-  > **"Installed but OBS doesn't show the filter"** almost always means a path mismatch: OBS
-  > scans the plugin dir under **its own** install prefix. Check where OBS keeps its bundled
-  > plugins with `dpkg -L obs-studio | grep obs-plugins` — the `.so` has to sit in that same
-  > tree. Flatpak/Snap OBS are sandboxed and won't see system-installed plugins at all; use the
-  > per-user drop-in, or install OBS from the official PPA.
+### macOS
 
-### macOS: Gatekeeper blocks the `.pkg`
+Open the `.pkg`, follow the installer, then restart OBS.
 
-Because the build is unsigned / ad-hoc (no paid Apple Developer account), double-clicking
-the downloaded `.pkg` shows *"Apple could not verify … it may contain malware"* with only
-**Done** and **Move to Trash** — no *Open* button. This is expected. Click **Done** (not
-Move to Trash), then use one of these once:
+The `.pkg` is not notarized, because that requires a paid Apple Developer account. Gatekeeper therefore blocks it the first time: double-clicking shows "Apple could not verify … it may contain malware" with only *Done* and *Move to Trash*, and no *Open* button. Click *Done*, then do one of the following once:
 
-- **Terminal** — strip the download quarantine, then open the `.pkg` normally:
+- In Terminal, remove the download quarantine flag and open the `.pkg` again:
 
   ```bash
   xattr -dr com.apple.quarantine ~/Downloads/cb-pitch-shift-*-macos-universal.pkg
   ```
 
-- **or** *System Settings → Privacy & Security → scroll down →* **Open Anyway** next to the
-  blocked `.pkg`, authenticate, then open the `.pkg` again.
+- Or go to *System Settings → Privacy & Security*, scroll down, click *Open Anyway* next to the blocked `.pkg`, authenticate, and open the `.pkg` again.
 
-The installer places `cb-pitch-shift.plugin` in `~/Library/Application Support/obs-studio/plugins/`.
-Apple Silicon requires the bundle to carry at least an ad-hoc signature to load at all; the
-CI build already applies it, so once the `.pkg` runs the plugin loads in OBS normally.
+The installer puts `cb-pitch-shift.plugin` in `~/Library/Application Support/obs-studio/plugins/`. Apple Silicon requires at least an ad-hoc signature for the bundle to load; the CI build already applies one, so the plugin loads normally once installed.
 
-> To skip this prompt entirely (download-and-run), the `.pkg` would need a paid Apple
-> Developer ID signature + notarization — deliberately deferred on the free path.
+### Linux
+
+Two options:
+
+- **`.deb`**: `sudo apt install ./cb-pitch-shift-*.deb`. This installs into `/usr`, which is where OBS from the official PPA (`ppa:obsproject/obs-studio`) or your distribution's package lives. If OBS does not pick the plugin up, your OBS is probably installed under a different prefix (for example a downloaded build under `/usr/local`, or a Flatpak/Snap sandbox). See below.
+- **Per-user install**: works with any non-sandboxed OBS, needs no `sudo`, and survives OBS updates. Extract the tarball (or copy the files out of the `.deb`) into `~/.config/obs-studio/plugins/cb-pitch-shift/` so that you end up with:
+
+  ```
+  ~/.config/obs-studio/plugins/cb-pitch-shift/bin/64bit/cb-pitch-shift.so
+  ~/.config/obs-studio/plugins/cb-pitch-shift/data/locale/*.ini
+  ```
+
+Restart OBS afterwards.
+
+If the plugin is installed but the filter does not show up in OBS, the paths probably do not match. OBS scans the plugin directory under its own install prefix. Run `dpkg -L obs-studio | grep obs-plugins` to see where OBS keeps its bundled plugins; the `.so` has to go in that same tree. Flatpak and Snap builds of OBS are sandboxed and cannot see system-installed plugins at all. For those, use the per-user install, or install OBS from the official PPA.
 
 ## Uninstall
 
-- **Windows (installer):** *Settings → Apps* (or *Control Panel → Programs and Features*)
-  → **Pitch Shift (ChiwaBots.com)** → Uninstall.
+- **Windows (installer):** *Settings → Apps* (or *Control Panel → Programs and Features*), find **Pitch Shift (ChiwaBots)** and uninstall it.
 - **Windows (ZIP):** delete the `cb-pitch-shift` folder from `%ProgramData%\obs-studio\plugins\`.
-- **macOS:** delete `~/Library/Application Support/obs-studio/plugins/cb-pitch-shift.plugin`.
-  A macOS `.pkg` has no built-in uninstaller, so this is a manual step — dragging that one
-  bundle to the Trash is the whole uninstall.
+- **macOS:** delete `~/Library/Application Support/obs-studio/plugins/cb-pitch-shift.plugin`. A `.pkg` has no uninstaller, so this is a manual step.
 - **Linux (.deb):** `sudo apt remove cb-pitch-shift` (or `sudo dpkg -r cb-pitch-shift`).
-- **Linux (per-user drop-in):** delete `~/.config/obs-studio/plugins/cb-pitch-shift/`.
+- **Linux (per-user):** delete `~/.config/obs-studio/plugins/cb-pitch-shift/`.
 
 Restart OBS afterwards.
 
 ## Usage
 
-Set it up once, then change the key live from the dock while you stream.
-
 ### 1. Put the backing track on its own source
 
-Add the accompaniment as a **Browser source** (for a YouTube / karaoke link) or a
-**Media source** (for a local file). Keep the singer's microphone on a *separate* source —
-this filter only affects the source you add it to, so the vocals stay untouched.
+Add the accompaniment as a Browser source (for a YouTube or karaoke link) or a Media source (for a local file). Keep the singer's microphone on a separate source. The filter only affects the source it is attached to, so the vocals stay as they are.
 
-### 2. Route the backing track's audio through OBS — don't skip this
+### 2. Route the backing track's audio through OBS
 
-This is an **audio filter**, so it only affects sound that flows through OBS. A Browser
-source plays its audio straight to your speakers by default, so the filter would receive
-nothing and do **nothing**. Open the backing-track source's **Properties** and tick
-**Control audio via OBS**. Once it's on, the source shows up in the **Audio Mixer** —
-that's how you know its audio is going through OBS.
+This is an audio filter, so it can only process audio that passes through OBS. By default a Browser source plays its audio straight to your speakers, and the filter receives nothing. Open the source's **Properties** and enable **Control audio via OBS**. The source then appears in the Audio Mixer, which is how you can tell that its audio is going through OBS.
 
-![Tick "Control audio via OBS" in the Browser source's Properties](docs/img/usage-control-audio.png)
+![Enable "Control audio via OBS" in the Browser source's Properties](docs/img/usage-control-audio.png)
 
-### 3. Add the Pitch Shift filter
+### 3. Add the filter
 
-Right-click the backing-track source → **Filters**. Under **Audio Filters**, click **+**
-and choose **Pitch Shift (ChiwaBots.com)**.
+Right-click the backing-track source and choose **Filters**. Under *Audio Filters*, click **+** and pick **Pitch Shift (ChiwaBots)**.
 
-![Adding the Pitch Shift (ChiwaBots.com) audio filter](docs/img/usage-add-filter.png)
+![Adding the Pitch Shift (ChiwaBots) audio filter](docs/img/usage-add-filter.png)
 
 ### 4. Set the key
 
-Drag **Key (semitones)** to transpose −12 … +12 semitones. **0 = bypass** (no processing,
-no added latency); higher values raise the key.
+Drag **Key (semitones)** between -12 and +12. 0 is a bypass (no processing, no added latency). Higher values raise the key.
 
 ![The Pitch Shift filter panel with the Key slider](docs/img/usage-filter-panel.png)
 
-### 5. Change the key live from the dock
+### 5. Change the key from the dock
 
-Open **Docks → Pitch Shift Key (ChiwaBots.com)** from the OBS menu bar. Pick the target
-source in the dropdown, then tap **−** / **+** to nudge the key or **Reset** to return to 0.
-The current value shows between the buttons, and the filter's slider moves with it — so one
-click during a song is all it takes.
+Open **Docks → Pitch Shift Key (ChiwaBots)** from the OBS menu bar. Pick the target source in the dropdown, then use **-** / **+** to change the key or **Reset** to go back to 0. The current value is shown between the buttons, and the filter's slider follows it.
 
 ![The Pitch Shift Key dock](docs/img/usage-dock.png)
 
-> If the target's audio isn't going through OBS (step 2), the dock marks it with **⚠** and
-> shows a hint — the pitch shift does nothing until you turn on *Control audio via OBS*.
+If the target's audio is not routed through OBS (step 2), the dock shows a **⚠** and a hint. The pitch shift does nothing until *Control audio via OBS* is turned on.
 
-### Notes & troubleshooting
+### Notes and troubleshooting
 
-- **~60 ms latency when active.** Only the audio is delayed, not the video, so the picture
-  runs slightly ahead. To realign, add a **Render Delay** filter to the same source set to
-  about 60 ms.
-- **No change in the sound?** The source's audio isn't routed through OBS — redo step 2
-  (the dock's **⚠** is the giveaway).
-- **Filter or dock missing after installing?** Restart OBS, and check the plugin landed in
-  the right place for your OBS install (see [Install](#install)).
+- The filter adds about 60 ms of audio latency when active. The video is not delayed, so the picture runs slightly ahead. To realign, add a *Render Delay* filter to the same source and set it to about 60 ms.
+- No change in the sound: the source's audio is not going through OBS. Go back to step 2. The **⚠** in the dock points to the same problem.
+- Filter or dock missing after installing: restart OBS, and check that the plugin went into the right directory for your OBS install (see [Install](#install)).
 
 ## Build from source
 
-The build uses the standard [obs-plugintemplate](https://github.com/obsproject/obs-plugintemplate)
-tooling: CMake presets download the pinned OBS, obs-deps and Qt6 (see `buildspec.json`)
-and the DSP headers on the fly, so you do not need a local OBS build.
+The build uses the standard [obs-plugintemplate](https://github.com/obsproject/obs-plugintemplate) tooling. The CMake presets download the pinned OBS, obs-deps and Qt6 (see `buildspec.json`) and the DSP headers, so you do not need a local OBS build.
 
-Requirements: CMake 3.28+, Git, and a platform toolchain — Visual Studio 2022 (C++ desktop
-workload) on Windows, Xcode on macOS, or GCC/Clang + Ninja on Linux.
+Requirements: CMake 3.28 or newer, Git, and a platform toolchain: Visual Studio 2022 with the C++ desktop workload on Windows, Xcode on macOS, or GCC/Clang plus Ninja on Linux.
 
 ```bash
 # Windows
@@ -184,18 +134,28 @@ cmake --preset ubuntu-x86_64
 cmake --build --preset ubuntu-x86_64
 ```
 
-Release artifacts for all three platforms are produced by GitHub Actions (see
-`.github/workflows/`) on every push.
+Release artifacts for all three platforms are built by GitHub Actions (see `.github/workflows/`) on every push.
 
 ## Third-party components
 
-- [Signalsmith Stretch](https://github.com/Signalsmith-Audio/signalsmith-stretch) and
-  [signalsmith-linear](https://github.com/Signalsmith-Audio/linear) — MIT, header-only
-  (the pitch-shift DSP), fetched at configure time.
-- Qt 6 — used for the dock, linked against the Qt that OBS ships (LGPL/GPL).
-- libobs / obs-frontend-api (OBS Studio) — GPL-2.0-or-later.
+- [Signalsmith Stretch](https://github.com/Signalsmith-Audio/signalsmith-stretch) and [signalsmith-linear](https://github.com/Signalsmith-Audio/linear): MIT, header-only. This is the pitch-shift DSP. Fetched at configure time.
+- Qt 6: used for the dock, linked against the Qt that OBS ships (LGPL/GPL).
+- libobs / obs-frontend-api (OBS Studio): GPL-2.0-or-later.
+
+## Bugs and feedback
+
+Please open an issue on this repository's *Issues* tab. Bug reports, setup questions and feature requests are all welcome.
+
+## Trademarks
+
+"OBS", "OBS Studio" and the OBS logo are trademarks of the OBS Project. This plugin is an independent third-party tool. It is not produced, endorsed or supported by the OBS Project, and ChiwaBots has no partnership with them. The OBS Studio screenshots in this README are there only to show how to use the filter.
+
+## AI disclosure
+
+Parts of this plugin were written with an AI coding assistant (Anthropic's Claude, used through Claude Code). It helped draft and revise the C++ filter and the Qt dock, the CMake and CI configuration, the six locale files, and this README. It was not used for the pitch-shift DSP, which is the third-party [Signalsmith Stretch](https://github.com/Signalsmith-Audio/signalsmith-stretch) library.
+
+The design, code review and testing were done by a person. Every change was read before it was merged. Each release is installed into OBS Studio on Windows, macOS and Linux to confirm that the filter and the dock load, and the audio result is checked by ear on Windows.
 
 ## License
 
-**GPL-2.0-or-later** — see [LICENSE](LICENSE). This plugin links libobs, which is
-distributed under the GNU GPL, so the plugin is released under a compatible license.
+GPL-2.0-or-later. See [LICENSE](LICENSE). The plugin links against libobs, which is distributed under the GNU GPL, so it is released under a compatible license.

@@ -299,7 +299,6 @@ void CbPitchDock::applyDelta(int delta)
 {
 	obs_source_t *filter = acquireTarget();
 	if (!filter) {
-
 		rescan();
 		return;
 	}
@@ -310,7 +309,6 @@ void CbPitchDock::applyDelta(int delta)
 
 	if (next != cur) {
 		obs_data_set_int(settings, S_SEMITONES, next);
-
 		obs_source_update(filter, settings);
 	}
 	setReadout(next, true);
@@ -321,7 +319,6 @@ void CbPitchDock::applyDelta(int delta)
 
 void CbPitchDock::pollTick()
 {
-
 	std::vector<TargetEntry> live;
 	enumPitchTargets(live, false);
 	const std::string sig = signatureOf(live);
@@ -349,7 +346,6 @@ void CbPitchDock::refreshReadout()
 		return;
 	obs_source_t *filter = acquireTarget();
 	if (!filter) {
-
 		rescan();
 		return;
 	}
@@ -401,7 +397,6 @@ void on_frontend_event(enum obs_frontend_event event, void *)
 	switch (event) {
 	case OBS_FRONTEND_EVENT_FINISHED_LOADING:
 	case OBS_FRONTEND_EVENT_SCENE_COLLECTION_CHANGED:
-
 		g_dock->rescan();
 		break;
 	default:
@@ -418,10 +413,9 @@ void cb_pitch_dock_register()
 
 	g_dock = new CbPitchDock();
 
-	// Brand the dock title the same way the filter name is branded (pitch-shared.hpp).
+	// Same suffix as the filter name (pitch-shared.hpp).
 	const std::string title = std::string(T_("DockTitle")) + CB_BRAND_SUFFIX;
 	if (!obs_frontend_add_dock_by_id(DOCK_ID, title.c_str(), g_dock)) {
-
 		delete g_dock;
 		g_dock = nullptr;
 		blog(LOG_WARNING, "[cb-pitch-shift] dock: add_dock_by_id failed");
@@ -434,10 +428,8 @@ void cb_pitch_dock_register()
 
 void cb_pitch_dock_unregister()
 {
-
 	obs_frontend_remove_event_callback(on_frontend_event, nullptr);
 	if (g_dock) {
-
 		obs_frontend_remove_dock(DOCK_ID);
 		g_dock = nullptr;
 	}

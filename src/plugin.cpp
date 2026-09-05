@@ -8,6 +8,7 @@
 #include "dock.hpp"
 
 #include <cstring>
+#include <mutex>
 #include <new>
 #include <string>
 #include <vector>
@@ -31,6 +32,10 @@ namespace {
 
 struct PitchFilter {
 	obs_source_t *context = nullptr;
+
+	// Guards `stretch` and the fields configure() reads: filter_audio runs on the
+	// audio thread while update runs on whatever thread OBS calls it from.
+	std::mutex lock;
 	signalsmith::stretch::SignalsmithStretch<float> stretch;
 
 	uint32_t channels = 0;
@@ -73,7 +78,6 @@ struct PitchFilter {
 
 const char *filter_get_name(void *)
 {
-
 	static const std::string name = std::string(T_NAME) + CB_BRAND_SUFFIX;
 	return name.c_str();
 }
@@ -84,6 +88,8 @@ void filter_update(void *data, obs_data_t *settings)
 
 	const int semitones = int(obs_data_get_int(settings, S_SEMITONES));
 	const bool cheaper = obs_data_get_bool(settings, S_CHEAPER);
+
+	std::lock_guard<std::mutex> guard(f->lock);
 
 	const bool preset_changed = cheaper != f->cheaper;
 	f->cheaper = cheaper;
@@ -147,7 +153,30 @@ struct obs_audio_data *filter_audio(void *data, struct obs_audio_data *audio)
 {
 	auto *f = static_cast<PitchFilter *>(data);
 
-	if (!f->channels || !audio->frames || f->semitones == 0)
+	if (!audio->frames)
+		return audio;
+
+	std::lock_guard<std::mutex> guard(f->lock);
+
+	if (f->semitones == 0)
+		return audio;
+
+	// The audio layout can change while the filter is alive (Settings -> Audio
+	// restarts the audio pipeline but keeps sources and filters). Re-read it here so
+	// channels added later are not passed through unshifted.
+	struct obs_audio_info oai = {};
+	if (obs_get_audio_info(&oai)) {
+		const uint32_t channels = get_audio_channels(oai.speakers);
+		if (channels != f->channels || oai.samples_per_sec != f->sample_rate) {
+			blog(LOG_INFO, "[cb-pitch-shift] audio layout changed: %u ch @ %u Hz -> %u ch @ %u Hz",
+			     f->channels, f->sample_rate, channels, oai.samples_per_sec);
+			f->channels = channels;
+			f->sample_rate = oai.samples_per_sec;
+			f->configure();
+		}
+	}
+
+	if (!f->channels)
 		return audio;
 
 	const size_t frames = audio->frames;
@@ -198,16 +227,15 @@ MODULE_EXPORT bool obs_module_load(void)
 	     LIBOBS_API_PATCH_VER);
 
 #if defined(_WIN32)
-	// Windows: obs-frontend-api.dll is delay-loaded, so only touch obs_frontend_*
-	// once we know it is present — otherwise the delay-load helper aborts.
+	// obs-frontend-api.dll is delay-loaded; calling into it when the DLL is not
+	// present would abort, so check first.
 	if (!GetModuleHandleW(L"obs-frontend-api.dll")) {
-		blog(LOG_INFO, "[cb-pitch-shift] no frontend (headless?) — dock skipped");
+		blog(LOG_INFO, "[cb-pitch-shift] no frontend, dock skipped");
 		return true;
 	}
 #endif
-	// macOS/Linux: obs-frontend-api is linked directly. A GUI OBS always provides
-	// it; a headless host without it just means the module fails to load, the
-	// accepted cost of the Qt dock (phase-212 D2).
+	// On macOS/Linux obs-frontend-api is linked directly; a host without it does
+	// not load the module at all.
 	cb_pitch_dock_register();
 
 	return true;

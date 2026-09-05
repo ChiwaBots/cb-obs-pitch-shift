@@ -1,13 +1,13 @@
 # SPDX-License-Identifier: GPL-2.0-or-later
 #
-# cb-pitch-shift — OBS pitch-shift audio filter (+ dock).
+# cb-pitch-shift: pitch-shift audio filter and dock for OBS Studio.
 #
-# Built on obsproject/obs-plugintemplate: the CMake helpers under cmake/, the
-# obs-deps download (buildspec.json) and the GitHub Actions CI produce Windows,
-# Linux and macOS artifacts from this one file. See phase-212.
+# Based on obsproject/obs-plugintemplate: the helpers under cmake/, the obs-deps
+# download (buildspec.json) and the GitHub Actions workflows build Windows, Linux
+# and macOS artifacts from this file.
 #
-# This plugin is C++ (Signalsmith DSP + a Qt dock), so it always needs both the
-# frontend API and Qt — unlike the stock template those two options default ON.
+# The dock needs both the frontend API and Qt, so unlike the stock template both
+# options default to ON.
 
 cmake_minimum_required(VERSION 3.28...3.30)
 
@@ -49,14 +49,11 @@ if(ENABLE_QT)
   )
 endif()
 
-# --- Signalsmith Stretch DSP (MIT, header-only) ------------------------------
-# Fetched, not vendored: the linear headers reference each other across the repo
-# root and include/ (stft.h does #include "../../stft.h"), so a whole-repo
-# checkout is the honest way to capture them. Pinned to the exact revisions the
-# Windows verification build (phase-170) measured against, so the DSP behaviour
-# does not drift. SOURCE_SUBDIR points at a directory with no CMakeLists.txt so
-# FetchContent only populates the headers and never runs the upstream CMake
-# (which would otherwise pull a different linear version of its own).
+# Signalsmith Stretch (MIT, header-only). Fetched at configure time instead of
+# vendored because the linear headers include each other across the repo root
+# and include/. Pinned to the revisions the plugin was verified against.
+# SOURCE_SUBDIR points at a directory without a CMakeLists.txt so FetchContent
+# only downloads the sources and does not run the upstream CMake.
 include(FetchContent)
 set(FETCHCONTENT_QUIET OFF)
 FetchContent_Declare(
@@ -76,9 +73,8 @@ FetchContent_Declare(
 )
 FetchContent_MakeAvailable(signalsmith_linear signalsmith_stretch)
 
-# SYSTEM so the third-party headers' warnings (Signalsmith's fft.h has a pile of
-# double->float narrowings) cannot drown out our own. Mirrors the layout the
-# verified Windows build used: stretch.h at the repo root, linear under include/.
+# SYSTEM so warnings from the third-party headers do not drown out our own.
+# stretch.h sits at the repo root, the linear headers under include/.
 target_include_directories(
   ${CMAKE_PROJECT_NAME}
   SYSTEM
@@ -88,17 +84,16 @@ target_include_directories(
 target_sources(${CMAKE_PROJECT_NAME} PRIVATE src/plugin.cpp src/dock.cpp src/dock.hpp src/pitch-shared.hpp)
 
 if(OS_WINDOWS)
-  # /utf-8: our sources carry UTF-8 comments; without it MSVC reads them as the
-  # system code page and emits C4819.
+  # The sources contain UTF-8 comments; without /utf-8 MSVC reads them in the
+  # system code page and warns (C4819).
   target_compile_options(${CMAKE_PROJECT_NAME} PRIVATE /utf-8)
   target_compile_definitions(${CMAKE_PROJECT_NAME} PRIVATE _CRT_SECURE_NO_WARNINGS)
 
-  # Delay-load only obs-frontend-api.dll (all function imports): if the module
-  # ever loads in a "Qt present but no frontend" host it still loads, and the
-  # GetModuleHandle guard in obs_module_load skips the dock. Qt itself CANNOT be
-  # delay-loaded — the dock imports Qt DATA symbols (QWidget::staticMetaObject)
-  # and /DELAYLOAD only supports function imports (LNK1194) — so Qt stays a hard
-  # dependency. Harmless on Windows, where OBS always ships Qt in bin/64bit.
+  # Delay-load obs-frontend-api.dll so the module still loads in a host without
+  # the frontend; obs_module_load checks for the DLL before registering the dock.
+  # Qt cannot be delay-loaded (the dock imports Qt data symbols such as
+  # QWidget::staticMetaObject, which /DELAYLOAD does not support, LNK1194), so
+  # it stays a hard dependency. OBS always ships Qt on Windows.
   target_link_options(${CMAKE_PROJECT_NAME} PRIVATE /DELAYLOAD:obs-frontend-api.dll)
   target_link_libraries(${CMAKE_PROJECT_NAME} PRIVATE delayimp)
 endif()
